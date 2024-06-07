@@ -80,7 +80,7 @@ void Game::Draw( ) const
 		m_pInventory->Draw();
 	}
 	if (m_Inv == InventoryState::close) {
-		//m_pSCamera->Aim(930, 780, m_Player->GetPosition());
+		m_pSCamera->Aim(930, 780, m_Player->GetPosition());
 		DrawSnipers();
 		m_Player->Draw();
 		m_Laser->Draw();
@@ -90,7 +90,7 @@ void Game::Draw( ) const
 		DrawPolices();
 		DrawVictory();
 		//DrawSquares();
-		//m_pSCamera->Reset();
+		m_pSCamera->Reset();
 	}
 
 
