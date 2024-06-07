@@ -7,6 +7,7 @@ using namespace utils;
 Game::Game( const Window& window ) 
 	:BaseGame{ window }
 	,m_Inv{ InventoryState::close }
+	,m_Victory{420,0,60,30}
 {
 	Initialize();
 }
@@ -55,6 +56,10 @@ void Game::Update( float elapsedSec )
 	for (int police{}; police < m_Polices.size(); ++police) {
 		if (utils::IsOverlapping(m_Polices.at(police)->GetBoundsVision(), m_Player->GetBounds()) == true) Reset();
 	}
+	if (utils::IsOverlapping(m_Player->GetBounds(), m_Victory) == true) {
+		std::cout << "YOU ESCAPED!";
+		Reset();
+	}
 	// Check keyboard state
 	//const Uint8 *pStates = SDL_GetKeyboardState( nullptr );
 	//if ( pStates[SDL_SCANCODE_RIGHT] )
@@ -75,7 +80,7 @@ void Game::Draw( ) const
 		m_pInventory->Draw();
 	}
 	if (m_Inv == InventoryState::close) {
-		m_pSCamera->Aim(930, 780, m_Player->GetPosition());
+		//m_pSCamera->Aim(930, 780, m_Player->GetPosition());
 		DrawSnipers();
 		m_Player->Draw();
 		m_Laser->Draw();
@@ -83,8 +88,9 @@ void Game::Draw( ) const
 		DrawChests();
 		DrawDoors();
 		DrawPolices();
+		DrawVictory();
 		//DrawSquares();
-		m_pSCamera->Reset();
+		//m_pSCamera->Reset();
 	}
 
 
@@ -514,6 +520,13 @@ void Game::InitializeWalls()
 		Point2f{150,540},
 		Point2f{150,510}
 	};
+	std::vector<Point2f> m_Walls24{
+		Point2f{0,0},
+		Point2f{0,780},
+		Point2f{930,780},
+		Point2f{930,0},
+		Point2f{0,0}
+	};
 	m_Walls.push_back(m_Walls1);
 	m_Walls.push_back(m_Walls2);
 	m_Walls.push_back(m_Walls3);
@@ -537,6 +550,7 @@ void Game::InitializeWalls()
 	m_Walls.push_back(m_Walls21);
 	m_Walls.push_back(m_Walls22);
 	m_Walls.push_back(m_Walls23);
+	m_Walls.push_back(m_Walls24);
 }
 
 void Game::InitializeChests()
@@ -603,6 +617,8 @@ void Game::InitializePolices()
 	m_Polices.push_back(new Police{ Point2f(840,180), Point2f(0,0), 0.f, 2.f,2, true, false,false, "up" });
 	m_Polices.push_back(new Police{ Point2f(60,690), Point2f(0,0), 0.f, 2.f,2, true, false,false, "up" });
 	m_Polices.push_back(new Police{ Point2f(600,210), Point2f(630,210), 30.f, 15.f,0, false, true,false, "right" });
+	m_Polices.push_back(new Police{ Point2f(780,300),  Point2f(780,480), 180.f, 45.f,0, false, false,true, "up" });
+	m_Polices.push_back(new Police{ Point2f(840,480), Point2f(840,300), 180.f, 45.f,0, false, false,true, "down" });
 }
 
 void Game::DrawWalls() const
@@ -676,6 +692,7 @@ void Game::DrawWalls() const
 	FillRect(810, 228, 30, 15);
 	FillRect(420, 120, 60, 30);
 	FillRect(150, 510, 30, 30);
+	DrawRect(0.f, 0.f, 930.f, 780.f);
 	SetColor(Color4f(0.f, 0.39f, 0.f, 1.f));
 	FillRect(30, 90, 135, 30);
 	FillRect(195, 0, 30, 120);
@@ -741,6 +758,12 @@ void Game::DrawSquares() const
 			DrawLine(m_Walls.at(vectors).at(point), m_Walls.at(vectors).at(point + 1));
 		}
 	}
+}
+
+void Game::DrawVictory() const
+{
+	utils::SetColor(Color4f(1.f, 1.f, 0.f, 1.f));
+	DrawRect(m_Victory);
 }
 
 void Game::DeleteAll()

@@ -8,6 +8,7 @@ public:
 	void Reset();
 	bool CheckTime();
 	Circlef GetBounds();
+	float ReturnTime();
 private:
 	Circlef m_Bounds;
 	float m_ElapsedTime;

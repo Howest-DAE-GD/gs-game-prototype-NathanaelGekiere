@@ -34,3 +34,8 @@ Circlef Snipers::GetBounds()
 {
 	return m_Bounds;
 }
+
+float Snipers::ReturnTime()
+{
+	return m_ElapsedTime;
+}

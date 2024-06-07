@@ -46,6 +46,7 @@ private:
 	std::vector<Door*> m_Doors;
 	std::vector<Snipers*> m_Snipers;
 	std::vector<Police*> m_Polices;
+	Rectf m_Victory;
 
 	// FUNCTIONS
 	void Initialize();
@@ -64,6 +65,7 @@ private:
 	void DrawSnipers() const;
 	void DrawPolices() const;
 	void DrawSquares() const;
+	void DrawVictory() const;
 	void DeleteAll();
 	void Reset();
 };
