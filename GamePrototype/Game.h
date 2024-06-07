@@ -1,5 +1,14 @@
 #pragma once
 #include "BaseGame.h"
+#include <vector>
+#include "Villain.h"
+#include "Door.h"
+#include "SCamera.h"
+#include "Inventory.h"
+#include "Chest.h"
+#include "Laser.h"
+#include "Snipers.h"
+#include "Police.h"
 class Game : public BaseGame
 {
 public:
@@ -22,9 +31,39 @@ public:
 	void ProcessMouseUpEvent( const SDL_MouseButtonEvent& e ) override;
 
 private:
+	// DATA MEMBERS
+	Villain* m_Player;
+	SCamera* m_pSCamera;
+	Laser* m_Laser;
+	Inventory* m_pInventory;
+	enum class InventoryState {
+		open, 
+		close
+	};
+	InventoryState m_Inv;
+	std::vector<std::vector<Point2f>> m_Walls;
+	std::vector<Chest*> m_Chests;
+	std::vector<Door*> m_Doors;
+	std::vector<Snipers*> m_Snipers;
+	std::vector<Police*> m_Polices;
 
 	// FUNCTIONS
 	void Initialize();
 	void Cleanup( );
 	void ClearBackground( ) const;
+
+	void InitializeAll();
+	void InitializeWalls();
+	void InitializeChests();
+	void InitializeDoors();
+	void InitializeSnipers();
+	void InitializePolices();
+	void DrawWalls() const;
+	void DrawChests() const;
+	void DrawDoors() const;
+	void DrawSnipers() const;
+	void DrawPolices() const;
+	void DrawSquares() const;
+	void DeleteAll();
+	void Reset();
 };
