@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Snipers.h"
 #include "utils.h"
+#include <iostream>
 
 Snipers::Snipers(Point2f pos)
 	:m_Bounds{pos.x, pos.y, 75}
@@ -17,6 +18,7 @@ void Snipers::Draw()
 void Snipers::Count(float elapsedSec)
 {
 	m_ElapsedTime += elapsedSec;
+	//std::cout << m_ElapsedTime << std::endl;
 }
 
 void Snipers::Reset()

@@ -204,26 +204,26 @@ void Police::ChangeVision()
 	}
 	if (m_Rotate == true) {
 		if (m_Watch == Direction::left) {
-			m_Vision.width = 60;
+			m_Vision.width = 55;
 			m_Vision.height = 30;
 			m_Vision.left = m_Bounds.left-60;
 			m_Vision.bottom = m_Bounds.bottom;
 		}
 		if (m_Watch == Direction::down) {
 			m_Vision.width = 30;
-			m_Vision.height = 60;
+			m_Vision.height = 55;
 			m_Vision.left = m_Bounds.left;
 			m_Vision.bottom = m_Bounds.bottom - 60;
 		}
 		if (m_Watch == Direction::right) {
-			m_Vision.width = 60;
+			m_Vision.width = 55;
 			m_Vision.height = 30;
 			m_Vision.left = m_Bounds.left + 30;
 			m_Vision.bottom = m_Bounds.bottom;
 		}
 		if (m_Watch == Direction::up) {
 			m_Vision.width = 30;
-			m_Vision.height = 60;
+			m_Vision.height = 55;
 			m_Vision.left = m_Bounds.left;
 			m_Vision.bottom = m_Bounds.bottom + 30;
 		}
@@ -233,4 +233,14 @@ void Police::ChangeVision()
 Rectf Police::GetBoundsVision()
 {
 	return m_Vision;
+}
+
+Rectf Police::GetBounds()
+{
+	return m_Bounds;
+}
+
+bool Police::IsRotating()
+{
+	return m_Rotate;
 }

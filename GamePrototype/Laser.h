@@ -2,7 +2,7 @@
 class Laser
 {
 public:
-	Laser();
+	Laser(Point2f posLaser, Point2f posButton);
 	void Draw();
 	void Disable();
 	bool IsEnabled() const;

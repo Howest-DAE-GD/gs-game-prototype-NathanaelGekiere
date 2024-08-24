@@ -33,11 +33,11 @@ void Game::Update( float elapsedSec )
 	if (m_Inv == InventoryState::close) {
 		m_Player->Move(pStates, elapsedSec, m_Walls, m_Chests, m_Doors);
 		if (pStates[SDL_SCANCODE_SPACE]) {
-			m_Player->Action(m_Chests, m_Doors, m_pInventory, m_Laser);
+			m_Player->Action(m_Chests, m_Doors, m_pInventory, m_Laser1);
 		}
 	}
-	if (m_Laser->IsEnabled() == true) {
-		if (utils::IsOverlapping(m_Player->GetBounds(), m_Laser->GetBounds()) == true) {
+	if (m_Laser1->IsEnabled() == true) {
+		if (utils::IsOverlapping(m_Player->GetBounds(), m_Laser1->GetBounds()) == true) {
 			Reset();
 		}
 	}
@@ -55,6 +55,11 @@ void Game::Update( float elapsedSec )
 	}
 	for (int police{}; police < m_Polices.size(); ++police) {
 		if (utils::IsOverlapping(m_Polices.at(police)->GetBoundsVision(), m_Player->GetBounds()) == true) Reset();
+	}
+	for (int police{}; police < m_Polices.size(); ++police) {
+		if (m_Polices.at(police)->IsRotating() == true) {
+			if (utils::IsOverlapping(m_Polices.at(police)->GetBounds(), m_Player->GetBounds()) == true) Reset();
+		}
 	}
 	if (utils::IsOverlapping(m_Player->GetBounds(), m_Victory) == true) {
 		std::cout << "YOU ESCAPED!";
@@ -80,17 +85,17 @@ void Game::Draw( ) const
 		m_pInventory->Draw();
 	}
 	if (m_Inv == InventoryState::close) {
-		m_pSCamera->Aim(930, 780, m_Player->GetPosition());
+		//m_pSCamera->Aim(930, 780, m_Player->GetPosition());
 		DrawSnipers();
 		m_Player->Draw();
-		m_Laser->Draw();
+		m_Laser1->Draw();
 		DrawWalls();
 		DrawChests();
 		DrawDoors();
 		DrawPolices();
 		DrawVictory();
 		//DrawSquares();
-		m_pSCamera->Reset();
+		//m_pSCamera->Reset();
 	}
 
 
@@ -179,8 +184,9 @@ void Game::InitializeAll()
 {
 	m_pInventory = new Inventory;
 	m_pSCamera = new SCamera{ 120.f , 60.f };
-	m_Player = new Villain{ Point2f(560, 620) };
-	m_Laser = new Laser{};
+	m_Player = new Villain{ Point2f(564,622) };
+	m_Laser1 = new Laser{Point2f(600,540), Point2f(600,490)};
+	m_Laser1 = new Laser{ Point2f(100,479), Point2f(60,383)};
 	InitializeWalls();
 	InitializeChests();
 	InitializeDoors();
@@ -557,11 +563,10 @@ void Game::InitializeChests()
 {
 	m_Chests.push_back(new Chest{ Point2f(510,600), true, 1, false, Color4f(0.23f,0.23f,0.23f,1.f), "Gray"});
 	m_Chests.push_back(new Chest{ Point2f(120,600), true, 2, false, Color4f(0.50f,0.f,0.50f,1.f), "Purple"});
-	m_Chests.push_back(new Chest{ Point2f(67,607), true, 3, false, Color4f(0.f, 1.f, 0.f, 1.f), "Green"});
+	m_Chests.push_back(new Chest{ Point2f(67,607), true, 3, false, Color4f(0.f, 0.f, 1.f, 1.f), "Blue" });
 	m_Chests.push_back(new Chest{ Point2f(127,427), false});
-	m_Chests.push_back(new Chest{ Point2f(127,332), true, 1, false, Color4f(0.f, 0.f, 1.f, 1.f), "Blue"});
-	m_Chests.push_back(new Chest{ Point2f(66,382), false});
-	m_Chests.push_back(new Chest{ Point2f(668,231), true, 1, false, Color4f(1.f,1.f,0.f,1.f), "Yellow" });
+	m_Chests.push_back(new Chest{ Point2f(127,332), true, 1, false, Color4f(1.f, 1.f, 0.f, 1.f), "Yellow"});
+	m_Chests.push_back(new Chest{ Point2f(668,231), true, 1, false, Color4f(0.f, 1.f, 0.f, 1.f), "Green" });
 	m_Chests.push_back(new Chest{ Point2f(170,97), true, 1, false, Color4f(1.f, 0.41f, 0.70f, 1.f), "Pink"});
 	m_Chests.push_back(new Chest{ Point2f(603,301), false});
 	m_Chests.push_back(new Chest{ Point2f(600,427), false});
@@ -571,17 +576,16 @@ void Game::InitializeChests()
 	m_Chests.push_back(new Chest{ Point2f(724,359), false});
 }
 
+
 void Game::InitializeDoors()
 {
 	m_Doors.push_back(new Door{ Rectf(600,660,30,30), Color4f(0.23f,0.23f,0.23f,1.f), "Gray"});
 	m_Doors.push_back(new Door{ Rectf(420,570,60,30), Color4f(0.50f,0.f,0.50f,1.f), "Purple" });
 	m_Doors.push_back(new Door{ Rectf(420,510,60,30), Color4f(0.50f,0.f,0.50f,1.f), "Purple" });
-	m_Doors.push_back(new Door{ Rectf(90,480,30,30),  Color4f(1.f,1.f,0.f,1.f), "Yellow" });
 	m_Doors.push_back(new Door{ Rectf(720,450,30,30), Color4f(1.f, 0.f, 0.f, 1.f), "Red" });
-	m_Doors.push_back(new Door{ Rectf(285,120,30,30), Color4f(0.f, 1.f, 0.f, 1.f), "Green"});
+	m_Doors.push_back(new Door{ Rectf(285,120,30,30), Color4f(0.f, 0.f, 1.f, 1.f), "Blue"});
 	m_Doors.push_back(new Door{ Rectf(645,120,30,30), Color4f(0.f, 1.f, 0.f, 1.f), "Green"});
 	m_Doors.push_back(new Door{ Rectf(900,120,30,30), Color4f(0.f, 1.f, 0.f, 1.f), "Green"});
-	m_Doors.push_back(new Door{ Rectf(510,540,30,30), Color4f(0.f, 0.f, 1.f, 1.f), "Blue" });
 	m_Doors.push_back(new Door{ Rectf(570,360,30,30), Color4f(1.f,1.f,0.f,1.f), "Yellow" });
 	m_Doors.push_back(new Door{ Rectf(390,30,30,30), Color4f(1.f, 0.41f, 0.70f, 1.f), "Pink" });
 }
@@ -794,8 +798,8 @@ void Game::DeleteAll()
 	m_pSCamera = nullptr;
 	delete m_pInventory;
 	m_pInventory = nullptr;
-	delete m_Laser;
-	m_Laser = nullptr;
+	delete m_Laser1;
+	m_Laser1 = nullptr;
 }
 
 void Game::Reset()

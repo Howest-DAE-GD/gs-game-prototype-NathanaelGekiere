@@ -34,7 +34,8 @@ private:
 	// DATA MEMBERS
 	Villain* m_Player;
 	SCamera* m_pSCamera;
-	Laser* m_Laser;
+	Laser* m_Laser1;
+	Laser* m_Laser2;
 	Inventory* m_pInventory;
 	enum class InventoryState {
 		open, 

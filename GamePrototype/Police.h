@@ -9,6 +9,8 @@ public:
 	void ChangeDirection(float elapsedSec);
 	void ChangeVision();
 	Rectf GetBoundsVision();
+	Rectf GetBounds();
+	bool IsRotating();
 private:
 	Rectf m_Bounds;
 	Rectf m_Vision;

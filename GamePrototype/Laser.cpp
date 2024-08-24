@@ -2,10 +2,10 @@
 #include "Laser.h"
 #include "utils.h"
 
-Laser::Laser()
-	:m_BoundsLaser{ 600,540,5,30 }
-	,m_BoundsButton{ 600,490,5,10 }
-	,m_RadiusButton{ 595,495,15,20 }
+Laser::Laser(Point2f posLaser, Point2f posButton)
+	:m_BoundsLaser{ posLaser.x, posLaser.y,5,30 }
+	,m_BoundsButton{ posButton.x, posButton.y,5,10 }
+	,m_RadiusButton{ posButton.x - 5, posButton.y + 5,15,20 }
 	,m_Enabled{true}
 	,m_Pushed{false}
 {
