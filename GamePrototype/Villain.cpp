@@ -49,7 +49,7 @@ void Villain::Move(const Uint8* pStates, float elapsedSec, std::vector<std::vect
 	}
 }
 
-void Villain::Action(std::vector<Chest*> chests, std::vector<Door*> doors, Inventory*& inv, Laser*& laser)
+void Villain::Action(std::vector<Chest*> chests, std::vector<Door*> doors, Inventory*& inv, Laser*& laser1, Laser*& laser2)
 {
 	for (int chest{}; chest < chests.size(); ++chest) {
 		if (utils::IsOverlapping(chests.at(chest)->GetRadius(), m_Bounds) == true) {
@@ -61,8 +61,11 @@ void Villain::Action(std::vector<Chest*> chests, std::vector<Door*> doors, Inven
 			inv->UseKey(doors.at(door));
 		}
 	}
-	if (utils::IsOverlapping(m_Bounds, laser->GetRadius()) == true) {
-		laser->Disable();
+	if (utils::IsOverlapping(m_Bounds, laser1->GetRadius()) == true) {
+		laser1->Disable();
+	}
+	if (utils::IsOverlapping(m_Bounds, laser2->GetRadius()) == true) {
+		laser2->Disable();
 	}
 }
 

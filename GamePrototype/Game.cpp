@@ -33,11 +33,16 @@ void Game::Update( float elapsedSec )
 	if (m_Inv == InventoryState::close) {
 		m_Player->Move(pStates, elapsedSec, m_Walls, m_Chests, m_Doors);
 		if (pStates[SDL_SCANCODE_SPACE]) {
-			m_Player->Action(m_Chests, m_Doors, m_pInventory, m_Laser1);
+			m_Player->Action(m_Chests, m_Doors, m_pInventory, m_Laser1, m_Laser2);
 		}
 	}
 	if (m_Laser1->IsEnabled() == true) {
 		if (utils::IsOverlapping(m_Player->GetBounds(), m_Laser1->GetBounds()) == true) {
+			Reset();
+		}
+	}
+	if (m_Laser2->IsEnabled() == true) {
+		if (utils::IsOverlapping(m_Player->GetBounds(), m_Laser2->GetBounds()) == true) {
 			Reset();
 		}
 	}
@@ -85,17 +90,18 @@ void Game::Draw( ) const
 		m_pInventory->Draw();
 	}
 	if (m_Inv == InventoryState::close) {
-		//m_pSCamera->Aim(930, 780, m_Player->GetPosition());
+		m_pSCamera->Aim(930, 780, m_Player->GetPosition());
 		DrawSnipers();
 		m_Player->Draw();
 		m_Laser1->Draw();
+		m_Laser2->Draw();
 		DrawWalls();
 		DrawChests();
 		DrawDoors();
 		DrawPolices();
 		DrawVictory();
 		//DrawSquares();
-		//m_pSCamera->Reset();
+		m_pSCamera->Reset();
 	}
 
 
@@ -186,7 +192,7 @@ void Game::InitializeAll()
 	m_pSCamera = new SCamera{ 120.f , 60.f };
 	m_Player = new Villain{ Point2f(564,622) };
 	m_Laser1 = new Laser{Point2f(600,540), Point2f(600,490)};
-	m_Laser1 = new Laser{ Point2f(100,479), Point2f(60,383)};
+	m_Laser2 = new Laser{ Point2f(100,479), Point2f(60,383)};
 	InitializeWalls();
 	InitializeChests();
 	InitializeDoors();
@@ -576,7 +582,6 @@ void Game::InitializeChests()
 	m_Chests.push_back(new Chest{ Point2f(724,359), false});
 }
 
-
 void Game::InitializeDoors()
 {
 	m_Doors.push_back(new Door{ Rectf(600,660,30,30), Color4f(0.23f,0.23f,0.23f,1.f), "Gray"});
@@ -800,6 +805,8 @@ void Game::DeleteAll()
 	m_pInventory = nullptr;
 	delete m_Laser1;
 	m_Laser1 = nullptr;
+	delete m_Laser2;
+	m_Laser2 = nullptr;
 }
 
 void Game::Reset()

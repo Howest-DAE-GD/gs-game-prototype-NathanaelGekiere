@@ -11,7 +11,7 @@ void SCamera::Aim(float levelW, float levelH, const Point2f& trackCenter)
 {
 	Point2f cameraPos{ trackCenter.x - (m_ScreenWidth / 4) *2, trackCenter.y - (m_ScreenHeight / 4) *3};
 	glPushMatrix();
-	//glScalef(8.f, 8.f, 1.f);
+	glScalef(8.f, 8.f, 1.f);
 	if (trackCenter.x + m_ScreenWidth / 2 > levelW)
 	{
 		cameraPos.x = levelW - m_ScreenWidth;
