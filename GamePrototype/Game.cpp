@@ -49,6 +49,7 @@ void Game::Update( float elapsedSec )
 	for (int sniper{}; sniper < m_Snipers.size(); ++sniper) {
 		if (utils::IsOverlapping(m_Player->GetBounds(), m_Snipers.at(sniper)->GetBounds()) == true) {
 			m_Snipers.at(sniper)->Count(elapsedSec);
+			m_Snipers.at(sniper)->SetAiming();
 		}
 		else m_Snipers.at(sniper)->Reset();
 		if (m_Snipers.at(sniper)->CheckTime() == true) Reset();
@@ -90,7 +91,7 @@ void Game::Draw( ) const
 		m_pInventory->Draw();
 	}
 	if (m_Inv == InventoryState::close) {
-		m_pSCamera->Aim(930, 780, m_Player->GetPosition());
+		//m_pSCamera->Aim(930, 780, m_Player->GetPosition());
 		DrawSnipers();
 		m_Player->Draw();
 		m_Laser1->Draw();
@@ -101,7 +102,7 @@ void Game::Draw( ) const
 		DrawPolices();
 		DrawVictory();
 		//DrawSquares();
-		m_pSCamera->Reset();
+		//m_pSCamera->Reset();
 	}
 
 
@@ -190,7 +191,7 @@ void Game::InitializeAll()
 {
 	m_pInventory = new Inventory;
 	m_pSCamera = new SCamera{ 120.f , 60.f };
-	m_Player = new Villain{ Point2f(564,622) };
+	m_Player = new Villain{ Point2f(12,119) };
 	m_Laser1 = new Laser{Point2f(600,540), Point2f(600,490)};
 	m_Laser2 = new Laser{ Point2f(100,479), Point2f(60,383)};
 	InitializeWalls();
