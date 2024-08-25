@@ -12,7 +12,7 @@ Villain::Villain(Point2f position)
 
 void Villain::Draw() const
 {
-	utils::SetColor(Color4f{ 1.f, 0.f, 0.f, 1.f });
+	utils::SetColor(Color4f{ 0.66f, 0.13f, 1.f, 1.f });
 	//utils::DrawRect(m_Bounds);
 	utils::FillEllipse(Point2f(m_Bounds.left + m_Bounds.width / 2, m_Bounds.bottom + m_Bounds.height / 2), m_Bounds.width / 2, m_Bounds.height / 2);
 }
@@ -49,7 +49,7 @@ void Villain::Move(const Uint8* pStates, float elapsedSec, std::vector<std::vect
 	}
 }
 
-void Villain::Action(std::vector<Chest*> chests, std::vector<Door*> doors, Inventory*& inv, Laser*& laser1, Laser*& laser2)
+void Villain::Action(std::vector<Chest*> chests, std::vector<Door*> doors, Inventory*& inv, Laser*& laser1, Laser*& laser2, Laser*& laser3)
 {
 	for (int chest{}; chest < chests.size(); ++chest) {
 		if (utils::IsOverlapping(chests.at(chest)->GetRadius(), m_Bounds) == true) {
@@ -66,6 +66,9 @@ void Villain::Action(std::vector<Chest*> chests, std::vector<Door*> doors, Inven
 	}
 	if (utils::IsOverlapping(m_Bounds, laser2->GetRadius()) == true) {
 		laser2->Disable();
+	}
+	if (utils::IsOverlapping(m_Bounds, laser3->GetRadius()) == true) {
+		laser3->Disable();
 	}
 }
 

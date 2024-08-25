@@ -14,14 +14,14 @@ private:
 	Key* m_PurpleKey;
 	Key* m_BlueKey;
 	Key* m_GrayKey;
-	Key* m_RedKey;
+	Key* m_OrangeKey;
 	Key* m_GreenKey;
 	Key* m_PinkKey;
 	Rectf m_YellowPos;
 	Rectf m_PurplePos;
 	Rectf m_BluePos;
 	Rectf m_GrayPos;
-	Rectf m_RedPos;
+	Rectf m_OrangePos;
 	Rectf m_GreenPos;
 	Rectf m_PinkPos;
 };

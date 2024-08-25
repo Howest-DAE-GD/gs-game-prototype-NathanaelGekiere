@@ -8,6 +8,7 @@ Game::Game( const Window& window )
 	:BaseGame{ window }
 	,m_Inv{ InventoryState::close }
 	,m_Victory{420,0,60,30}
+	, m_Space{ false }
 {
 	Initialize();
 }
@@ -29,11 +30,17 @@ void Game::Cleanup( )
 
 void Game::Update( float elapsedSec )
 {
+	m_Space = false;
 	const Uint8* pStates = SDL_GetKeyboardState(nullptr);
 	if (m_Inv == InventoryState::close) {
 		m_Player->Move(pStates, elapsedSec, m_Walls, m_Chests, m_Doors);
 		if (pStates[SDL_SCANCODE_SPACE]) {
-			m_Player->Action(m_Chests, m_Doors, m_pInventory, m_Laser1, m_Laser2);
+			m_Player->Action(m_Chests, m_Doors, m_pInventory, m_Laser1, m_Laser2, m_Laser3);
+		}
+		for (int police{}; police < m_Polices.size(); ++police) {
+			m_Polices.at(police)->Move(elapsedSec);
+			m_Polices.at(police)->ChangeDirection(elapsedSec);
+			m_Polices.at(police)->ChangeVision();
 		}
 	}
 	if (m_Laser1->IsEnabled() == true) {
@@ -46,6 +53,11 @@ void Game::Update( float elapsedSec )
 			Reset();
 		}
 	}
+	if (m_Laser3->IsEnabled() == true) {
+		if (utils::IsOverlapping(m_Player->GetBounds(), m_Laser3->GetBounds()) == true) {
+			Reset();
+		}
+	}
 	for (int sniper{}; sniper < m_Snipers.size(); ++sniper) {
 		if (utils::IsOverlapping(m_Player->GetBounds(), m_Snipers.at(sniper)->GetBounds()) == true) {
 			m_Snipers.at(sniper)->Count(elapsedSec);
@@ -53,11 +65,6 @@ void Game::Update( float elapsedSec )
 		}
 		else m_Snipers.at(sniper)->Reset();
 		if (m_Snipers.at(sniper)->CheckTime() == true) Reset();
-	}
-	for (int police{}; police < m_Polices.size(); ++police) {
-		m_Polices.at(police)->Move(elapsedSec);
-		m_Polices.at(police)->ChangeDirection(elapsedSec);
-		m_Polices.at(police)->ChangeVision();
 	}
 	for (int police{}; police < m_Polices.size(); ++police) {
 		if (utils::IsOverlapping(m_Polices.at(police)->GetBoundsVision(), m_Player->GetBounds()) == true) Reset();
@@ -70,6 +77,25 @@ void Game::Update( float elapsedSec )
 	if (utils::IsOverlapping(m_Player->GetBounds(), m_Victory) == true) {
 		std::cout << "YOU ESCAPED!";
 		Reset();
+	}
+	for (int chest{}; chest < m_Chests.size(); ++chest) {
+		if (utils::IsOverlapping(m_Chests.at(chest)->GetRadius(), m_Player->GetBounds()) == true) {
+			if (m_Chests.at(chest)->IsChestOpen() == false) m_Space = true;
+		}
+	}
+	for (int door{}; door < m_Doors.size(); ++door) {
+		if (utils::IsOverlapping(m_Doors.at(door)->GetRadius(), m_Player->GetBounds()) == true) {
+			if (m_Doors.at(door)->IsDoorOpen() == false) m_Space = true;
+		}
+	}
+	if (utils::IsOverlapping(m_Player->GetBounds(), m_Laser1->GetRadius()) == true) {
+		if (m_Laser1->IsEnabled() == true) m_Space = true;
+	}
+	else if (utils::IsOverlapping(m_Player->GetBounds(), m_Laser2->GetRadius()) == true) {
+		if (m_Laser2->IsEnabled() == true) m_Space = true;
+	}
+	else if (utils::IsOverlapping(m_Player->GetBounds(), m_Laser3->GetRadius()) == true) {
+		if (m_Laser3->IsEnabled() == true) m_Space = true;
 	}
 	// Check keyboard state
 	//const Uint8 *pStates = SDL_GetKeyboardState( nullptr );
@@ -85,7 +111,6 @@ void Game::Update( float elapsedSec )
 
 void Game::Draw( ) const
 {
-
 	ClearBackground();
 	if (m_Inv == InventoryState::open) {
 		m_pInventory->Draw();
@@ -96,27 +121,39 @@ void Game::Draw( ) const
 		m_Player->Draw();
 		m_Laser1->Draw();
 		m_Laser2->Draw();
+		m_Laser3->Draw();
+		DrawPolices();
 		DrawWalls();
 		DrawChests();
 		DrawDoors();
-		DrawPolices();
 		DrawVictory();
 		//DrawSquares();
 		m_pSCamera->Reset();
+		if (m_Space == true) {
+			m_pSpace->Draw(Rectf(290, 20, 300, 40));
+		}
 	}
-
 
 }
 
 void Game::ProcessKeyDownEvent( const SDL_KeyboardEvent & e )
 {
-	if (e.keysym.sym == SDLK_i) m_Inv = InventoryState::open;
+	
 	//std::cout << "KEYDOWN event: " << e.keysym.sym << std::endl;
 }
 
 void Game::ProcessKeyUpEvent( const SDL_KeyboardEvent& e )
 {
-	if (e.keysym.sym == SDLK_i) m_Inv = InventoryState::close;
+
+	if (e.keysym.sym == SDLK_i) {
+		if (m_Inv == InventoryState::open) {
+			m_Inv = InventoryState::close;
+		}
+		else if (m_Inv == InventoryState::close) {
+			m_Inv = InventoryState::open;
+		}
+	}
+	if (e.keysym.sym == SDLK_r) Reset();
 	//if (e.keysym.sym == SDLK_SPACE) {
 	//	if (m_Player->HasKey() == false) m_Player->PickUpKey(m_YellowKey);
 	//	else m_Player->PutDownKey();
@@ -189,11 +226,18 @@ void Game::ClearBackground( ) const
 
 void Game::InitializeAll()
 {
+	m_pFont = TTF_OpenFont("DIN-Light.otf", 16);
+	if (m_pFont == nullptr)
+	{
+		std::cerr << "Game::OpenLabelFont, error when calling TTF_OpenFont: " << TTF_GetError() << std::endl;
+	}
 	m_pInventory = new Inventory;
 	m_pSCamera = new SCamera{ 120.f , 60.f };
-	m_Player = new Villain{ Point2f(564,622) };
+	m_Player = new Villain{ Point2f(560,623) };
 	m_Laser1 = new Laser{Point2f(600,540), Point2f(600,490)};
 	m_Laser2 = new Laser{ Point2f(100,479), Point2f(60,383)};
+	m_Laser3 = new Laser{ Point2f(205,90), Point2f(105,100) };
+	m_pSpace = new Texture{ "Space", m_pFont, Color4f(1.f,1.f,1.f,1.f) };
 	InitializeWalls();
 	InitializeChests();
 	InitializeDoors();
@@ -228,7 +272,7 @@ void Game::InitializeWalls()
 		Point2f{390,60}
 	};
 	std::vector<Point2f> m_Walls3{
-		Point2f{285,120},
+		Point2f{315,120},
 		Point2f{30,120},
 		Point2f{30,690},
 		Point2f{90,690},
@@ -325,8 +369,8 @@ void Game::InitializeWalls()
 		Point2f{90,240},
 		Point2f{60,240},
 		Point2f{60,150},
-		Point2f{285,150},
-		Point2f{285,120}
+		Point2f{315,150},
+		Point2f{315,120}
 	};
 	std::vector<Point2f> m_Walls4{
 		Point2f{120,240},
@@ -434,28 +478,40 @@ void Game::InitializeWalls()
 	};
 	std::vector<Point2f> m_Walls13{
 		Point2f{30,90},
-		Point2f{135,90},
+		Point2f{105,90},
+		Point2f{105,120},
+		Point2f{30,120},
+		Point2f{ 30,120 }
+	}; 
+	std::vector<Point2f> m_Walls26{
+		Point2f{135,120},
 		Point2f{135,60},
 		Point2f{90,60},
 		Point2f{90,30},
-		Point2f{165,30},
-		Point2f{165,120},
-		Point2f{30,120},
-		Point2f{30,90}
+		Point2f{ 165,30 },
+		Point2f{165, 120},
+		Point2f{135,120}
 	};
 	std::vector<Point2f> m_Walls14{
-		Point2f{195,120},
-		Point2f{225,120},
+		Point2f{195,90},
+		Point2f{225,90},
 		Point2f{225,0},
 		Point2f{195,0},
-		Point2f{195,120}
+		Point2f{195,90}
 	};
 	std::vector<Point2f> m_Walls15{
 		Point2f{270,45},
 		Point2f{270,75},
+		Point2f{292.5f,75},
+		Point2f{292.5f,45},
+		Point2f{270,45}
+	};
+	std::vector<Point2f> m_Walls25{
+		Point2f{322.5f,45},
+		Point2f{322.5f,75},
 		Point2f{345,75},
 		Point2f{345,45},
-		Point2f{270,45}
+		Point2f{322.5f,45}
 	};
 	std::vector<Point2f> m_Walls16{
 		Point2f{30,720},
@@ -564,6 +620,8 @@ void Game::InitializeWalls()
 	m_Walls.push_back(m_Walls22);
 	m_Walls.push_back(m_Walls23);
 	m_Walls.push_back(m_Walls24);
+	m_Walls.push_back(m_Walls25);
+	m_Walls.push_back(m_Walls26);
 }
 
 void Game::InitializeChests()
@@ -574,12 +632,12 @@ void Game::InitializeChests()
 	m_Chests.push_back(new Chest{ Point2f(127,427), false});
 	m_Chests.push_back(new Chest{ Point2f(127,332), true, 1, false, Color4f(1.f, 1.f, 0.f, 1.f), "Yellow"});
 	m_Chests.push_back(new Chest{ Point2f(668,231), true, 1, false, Color4f(0.f, 1.f, 0.f, 1.f), "Green" });
-	m_Chests.push_back(new Chest{ Point2f(170,97), true, 1, false, Color4f(1.f, 0.41f, 0.70f, 1.f), "Pink"});
+	m_Chests.push_back(new Chest{ Point2f(300,157), true, 1, false, Color4f(1.f, 0.41f, 0.70f, 1.f), "Pink"});
 	m_Chests.push_back(new Chest{ Point2f(603,301), false});
 	m_Chests.push_back(new Chest{ Point2f(600,427), false});
 	m_Chests.push_back(new Chest{ Point2f(666,427), false});
 	m_Chests.push_back(new Chest{ Point2f(666,302), false});
-	m_Chests.push_back(new Chest{ Point2f(724,301), true, 1, false, Color4f(1.f, 0.f, 0.f, 1.f), "Red"});
+	m_Chests.push_back(new Chest{ Point2f(724,301), true, 1, false, Color4f(1.f, 0.64f, 0.f, 1.f), "Orange"});
 	m_Chests.push_back(new Chest{ Point2f(724,359), false});
 }
 
@@ -588,10 +646,10 @@ void Game::InitializeDoors()
 	m_Doors.push_back(new Door{ Rectf(600,660,30,30), Color4f(0.23f,0.23f,0.23f,1.f), "Gray"});
 	m_Doors.push_back(new Door{ Rectf(420,570,60,30), Color4f(0.50f,0.f,0.50f,1.f), "Purple" });
 	m_Doors.push_back(new Door{ Rectf(420,510,60,30), Color4f(0.50f,0.f,0.50f,1.f), "Purple" });
-	m_Doors.push_back(new Door{ Rectf(720,450,30,30), Color4f(1.f, 0.f, 0.f, 1.f), "Red" });
-	m_Doors.push_back(new Door{ Rectf(285,120,30,30), Color4f(0.f, 0.f, 1.f, 1.f), "Blue"});
+	m_Doors.push_back(new Door{ Rectf(720,450,30,30), Color4f(1.f, 0.64f, 0.f, 1.f), "Orange" });
+	//m_Doors.push_back(new Door{ Rectf(285,120,30,30), Color4f(0.f, 0.f, 1.f, 1.f), "Blue"});
 	m_Doors.push_back(new Door{ Rectf(645,120,30,30), Color4f(0.f, 1.f, 0.f, 1.f), "Green"});
-	m_Doors.push_back(new Door{ Rectf(900,120,30,30), Color4f(0.f, 1.f, 0.f, 1.f), "Green"});
+	m_Doors.push_back(new Door{ Rectf(900,120,30,30), Color4f(0.f, 0.f, 1.f, 1.f), "Blue"});
 	m_Doors.push_back(new Door{ Rectf(570,360,30,30), Color4f(1.f,1.f,0.f,1.f), "Yellow" });
 	m_Doors.push_back(new Door{ Rectf(390,30,30,30), Color4f(1.f, 0.41f, 0.70f, 1.f), "Pink" });
 }
@@ -605,30 +663,30 @@ void Game::InitializeSnipers()
 
 void Game::InitializePolices()
 {
-	m_Polices.push_back(new Police{ Point2f(180,540), Point2f(120,540), 60.f, 15.f,0, false, true, false, "left" });
-	m_Polices.push_back(new Police{ Point2f(120,540), Point2f(120,480), 60.f, 15.f,0, false, true, false, "down" });
-	m_Polices.push_back(new Police{ Point2f(120,480), Point2f(180,480), 60.f, 15.f,0, false, true,false, "right" });
-	m_Polices.push_back(new Police{ Point2f(180,480), Point2f(180,540), 60.f, 15.f,0, false, true,false, "up" });
-	m_Polices.push_back(new Police{ Point2f(105,360), Point2f(135,360), 30.f,15.f,0, false, true,false, "right" });
-	m_Polices.push_back(new Police{ Point2f(150,270), Point2f(90,270), 60.f, 15.f,0, false, true,false, "left" });
-	m_Polices.push_back(new Police{ Point2f(90,270), Point2f(90,210), 60.f, 15.f,0, false, true,false, "down" });
-	m_Polices.push_back(new Police{ Point2f(90,210), Point2f(150,210), 60.f, 15.f,0, false, true,false, "right" });
-	m_Polices.push_back(new Police{ Point2f(150,210), Point2f(150,270), 60.f, 15.f,0, false, true,false, "up" });
-	m_Polices.push_back(new Police{ Point2f(615,330), Point2f(675,330), 60.f, 30.f,0, false, true,false, "right" });
-	m_Polices.push_back(new Police{ Point2f(390,210),  Point2f(390,420), 180.f, 45.f,0, false, false,true, "up" });
-	m_Polices.push_back(new Police{ Point2f(480,420), Point2f(480,210), 180.f, 45.f,0, false, false,true, "down" });
-	m_Polices.push_back(new Police{ Point2f(345,75), Point2f(240,75), 105.f, 45.f,0, false, false,true, "left" });
-	m_Polices.push_back(new Police{ Point2f(240,15), Point2f(345,15), 105.f, 45.f,0, false, false,true, "right" });
-	m_Polices.push_back(new Police{ Point2f(660,90), Point2f(510,90), 150.f, 30.f,0, false, false,true, "left" });
-	m_Polices.push_back(new Police{ Point2f(510,0), Point2f(690,0), 180.f, 30.f,0, false, false,true, "right" });
-	m_Polices.push_back(new Police{ Point2f(240,300), Point2f(0,0), 0.f, 2.f,3, true, false,false, "left" });
-	m_Polices.push_back(new Police{ Point2f(300,450), Point2f(0,0), 0.f, 2.f,3, true, false,false, "right" });
-	m_Polices.push_back(new Police{ Point2f(810,150), Point2f(0,0), 0.f, 2.f,2, true, false,false, "up" });
-	m_Polices.push_back(new Police{ Point2f(840,180), Point2f(0,0), 0.f, 2.f,2, true, false,false, "up" });
-	m_Polices.push_back(new Police{ Point2f(60,690), Point2f(0,0), 0.f, 2.f,2, true, false,false, "up" });
-	m_Polices.push_back(new Police{ Point2f(600,210), Point2f(630,210), 30.f, 15.f,0, false, true,false, "right" });
-	m_Polices.push_back(new Police{ Point2f(780,300),  Point2f(780,480), 180.f, 45.f,0, false, false,true, "up" });
-	m_Polices.push_back(new Police{ Point2f(840,480), Point2f(840,300), 180.f, 45.f,0, false, false,true, "down" });
+	m_Polices.push_back(new Police{ Point2f(180,540), Point2f(120,540), 60.f, 15.f,0,0, false, true, false, "left" });
+	m_Polices.push_back(new Police{ Point2f(120,540), Point2f(120,480), 60.f, 15.f,0,0, false, true, false, "down" });
+	m_Polices.push_back(new Police{ Point2f(120,480), Point2f(180,480), 60.f, 15.f,0,0, false, true,false, "right" });
+	m_Polices.push_back(new Police{ Point2f(180,480), Point2f(180,540), 60.f, 15.f,0,0, false, true,false, "up" });
+	m_Polices.push_back(new Police{ Point2f(105,360), Point2f(135,360), 30.f,15.f,0,0, false, true,false, "right" });
+	m_Polices.push_back(new Police{ Point2f(150,270), Point2f(90,270), 60.f, 15.f,0,0, false, true,false, "left" });
+	m_Polices.push_back(new Police{ Point2f(90,270), Point2f(90,210), 60.f, 15.f,0,0,false, true,false, "down" });
+	m_Polices.push_back(new Police{ Point2f(90,210), Point2f(150,210), 60.f, 15.f,0,0, false, true,false, "right" });
+	m_Polices.push_back(new Police{ Point2f(150,210), Point2f(150,270), 60.f, 15.f,0,0, false, true,false, "up" });
+	m_Polices.push_back(new Police{ Point2f(615,330), Point2f(675,330), 60.f, 30.f,0,0, false, true,false, "right" });
+	m_Polices.push_back(new Police{ Point2f(390,210),  Point2f(390,420), 180.f, 45.f,0,0, false, false,true, "up" });
+	m_Polices.push_back(new Police{ Point2f(480,420), Point2f(480,210), 180.f, 45.f,0,0, false, false,true, "down" });
+	m_Polices.push_back(new Police{ Point2f(345,75), Point2f(240,75), 105.f, 45.f,0,0, false, false,true, "left" });
+	m_Polices.push_back(new Police{ Point2f(240,15), Point2f(345,15), 105.f, 45.f,0,0, false, false,true, "right" });
+	m_Polices.push_back(new Police{ Point2f(660,90), Point2f(510,90), 150.f, 30.f,0,0, false, false,true, "left" });
+	m_Polices.push_back(new Police{ Point2f(510,0), Point2f(690,0), 180.f, 30.f,0,0, false, false,true, "right" });
+	m_Polices.push_back(new Police{ Point2f(240,300), Point2f(0,0), 0.f, 2.f,3,-15.f, true, false,false, "left" });
+	m_Polices.push_back(new Police{ Point2f(300,450), Point2f(0,0), 0.f, 2.f,3,0, true, false,false, "right" });
+	m_Polices.push_back(new Police{ Point2f(810,150), Point2f(0,0), 0.f, 2.f,2,0, true, false,false, "up" });
+	m_Polices.push_back(new Police{ Point2f(840,180), Point2f(0,0), 0.f, 2.f,2,0, true, false,false, "up" });
+	m_Polices.push_back(new Police{ Point2f(60,690), Point2f(0,0), 0.f, 2.f,2,0, true, false,false, "up" });
+	m_Polices.push_back(new Police{ Point2f(600,210), Point2f(630,210), 30.f, 15.f,0,0, false, true,false, "right" });
+	m_Polices.push_back(new Police{ Point2f(780,300),  Point2f(780,480), 180.f, 45.f,0,0, false, false,true, "up" });
+	m_Polices.push_back(new Police{ Point2f(840,480), Point2f(840,300), 180.f, 45.f,0,0, false, false,true, "down" });
 }
 
 void Game::DrawWalls() const
@@ -641,7 +699,7 @@ void Game::DrawWalls() const
 	FillRect(315, 120, 15, 30);
 	FillRect(90, 180, 240, 30);
 	FillRect(120, 240, 30, 30);
-	FillRect(30, 120, 255, 30);
+	FillRect(30, 120, 285, 30);
 	FillRect(30, 150, 30, 480);
 	FillRect(60, 240, 30, 135);
 	FillRect(60, 405, 30, 75);
@@ -704,11 +762,12 @@ void Game::DrawWalls() const
 	FillRect(150, 510, 30, 30);
 	DrawRect(0.f, 0.f, 930.f, 780.f);
 	SetColor(Color4f(0.f, 0.39f, 0.f, 1.f));
-	FillRect(30, 90, 135, 30);
-	FillRect(195, 0, 30, 120);
-	FillRect(135, 30, 30, 60);
+	FillRect(30, 90, 75, 30);
+	FillRect(195, 0, 30, 90);
+	FillRect(135, 30, 30, 90);
 	FillRect(90, 30, 45, 30);
-	FillRect(270, 45, 75, 30);
+	FillRect(270, 45, 22.5f, 30);
+	FillRect(322.5f, 45, 22.5f, 30);
 	FillRect(555, 45, 165, 30);
 	FillRect(690, 75, 30, 45);
 	FillRect(540, 75, 60, 15);
@@ -774,6 +833,8 @@ void Game::DrawVictory() const
 {
 	utils::SetColor(Color4f(1.f, 1.f, 0.f, 1.f));
 	DrawRect(m_Victory);
+	DrawTriangle(Point2f(425, 10), Point2f(440, 10), Point2f(433, 0));
+	DrawTriangle(Point2f(460, 10), Point2f(475, 10), Point2f(468, 0));
 }
 
 void Game::DeleteAll()
@@ -808,6 +869,15 @@ void Game::DeleteAll()
 	m_Laser1 = nullptr;
 	delete m_Laser2;
 	m_Laser2 = nullptr;
+	delete m_Laser3;
+	m_Laser3 = nullptr;
+	delete m_pSpace;
+	m_pSpace = nullptr;
+	if (m_pFont != nullptr)
+	{
+		TTF_CloseFont(m_pFont);
+		m_pFont = nullptr;
+	}
 }
 
 void Game::Reset()

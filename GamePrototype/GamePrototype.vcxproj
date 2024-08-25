@@ -154,7 +154,6 @@ xcopy "$(SolutionDir)Resources\*.*" "$(TargetDir)" /y /d /s</Command>
     <ClCompile Include="Key.cpp" />
     <ClCompile Include="Laser.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="PCamera.cpp" />
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="Police.cpp" />
     <ClCompile Include="SCamera.cpp" />
@@ -168,7 +167,6 @@ xcopy "$(SolutionDir)Resources\*.*" "$(TargetDir)" /y /d /s</Command>
     <ClInclude Include="Inventory.h" />
     <ClInclude Include="Key.h" />
     <ClInclude Include="Laser.h" />
-    <ClInclude Include="PCamera.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Police.h" />
     <ClInclude Include="SCamera.h" />

@@ -9,6 +9,7 @@ Chest::Chest(Point2f pos, bool hasKey, int uses, bool used, Color4f keyColor, st
 	, m_State{ ChestState::closed }
 	, m_HasKey(hasKey)
 	, m_Key{}
+	, m_IsOpen{ false }
 {
 	if (hasKey == true) {
 		m_Key = new Key{ m_Bounds, uses, used, keyColor, keyColors };
@@ -24,6 +25,7 @@ Chest::Chest(Point2f pos, bool hasKey)
 , m_State{ ChestState::closed }
 , m_HasKey(hasKey)
 , m_Key{}
+, m_IsOpen{ false }
 {
 	if (hasKey == false) {
 		m_Key = nullptr;
@@ -49,6 +51,7 @@ void Chest::Open(Inventory* inv)
 	if (m_HasKey == true) {
 		inv->StoreKey(m_Key);
 	}
+	m_IsOpen = true;
 }
 
 Rectf Chest::GetRadius()
@@ -63,5 +66,10 @@ std::vector<Point2f> Chest::ReturnVector()
 		Point2f{  m_Bounds.left + m_Bounds.width, m_Bounds.bottom + m_Bounds.height},
 		Point2f{ m_Bounds.left + m_Bounds.width, m_Bounds.bottom },
 		Point2f{ m_Bounds.left, m_Bounds.bottom  }};
+}
+
+bool Chest::IsChestOpen()
+{
+	return m_IsOpen;
 }
 

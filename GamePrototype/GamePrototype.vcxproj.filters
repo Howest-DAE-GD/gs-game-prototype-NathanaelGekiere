@@ -51,9 +51,6 @@
     <ClCompile Include="Police.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PCamera.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h">
@@ -87,9 +84,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Police.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PCamera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -2,14 +2,16 @@
 #include "Police.h"
 #include "utils.h"
 
-Police::Police(Point2f pos, Point2f end, float distance, float velocity, int points, bool rotate, bool cycle, bool linear, std::string direction)
+Police::Police(Point2f pos, Point2f end, float distance, float velocity, int points, float angle, bool rotate, bool cycle, bool linear, std::string direction)
 	:m_Bounds{pos.x, pos.y, 30, 30}
-	, m_Vision{ pos.x, pos.y, 0,0}
+	,m_Vision{ pos.x, pos.y, 0,0}
 	,m_StartPos{pos}
 	,m_EndPos{end}
 	,m_Distance{distance}
 	,m_Velocity{velocity}
 	,m_ElapsedTime{ 0 }
+	,m_Angle{angle}
+	,m_MaxAngle{angle += points * 90}
 	,m_Point{ 0 }
 	,m_Points{points}
 	,m_Rotate{rotate}
@@ -34,6 +36,9 @@ void Police::Draw()
 	utils::FillEllipse(Point2f((m_Bounds.left + m_Bounds.width / 2) -1,( m_Bounds.bottom + m_Bounds.height / 2) -1), m_Bounds.width / 6, m_Bounds.height / 6);
 	utils::SetColor(Color4f(1.f, 0.f, 0.f, 1.f));
 	utils::FillRect(m_Vision);
+	if (m_Rotate == true) {
+		utils::DrawRect(m_Bounds);
+	}
 }
 
 void Police::Move(float elapsedSec)
@@ -206,14 +211,14 @@ void Police::ChangeVision()
 		if (m_Watch == Direction::left) {
 			m_Vision.width = 55;
 			m_Vision.height = 30;
-			m_Vision.left = m_Bounds.left-60;
+			m_Vision.left = m_Bounds.left-55;
 			m_Vision.bottom = m_Bounds.bottom;
 		}
 		if (m_Watch == Direction::down) {
 			m_Vision.width = 30;
 			m_Vision.height = 55;
 			m_Vision.left = m_Bounds.left;
-			m_Vision.bottom = m_Bounds.bottom - 60;
+			m_Vision.bottom = m_Bounds.bottom - 55;
 		}
 		if (m_Watch == Direction::right) {
 			m_Vision.width = 55;

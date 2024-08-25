@@ -18,7 +18,7 @@ void Laser::Draw()
 		utils::FillRect(m_BoundsLaser);
 	}
 	if (m_Pushed == false) {
-		utils::SetColor(Color4f(1.f, 0.f, 0.f, 1.f));
+		utils::SetColor(Color4f(0.f, 0.50f, 0.f, 1.f));
 		utils::FillRect(m_BoundsButton);
 	}
 	if (m_Pushed == true) {

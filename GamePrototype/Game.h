@@ -9,6 +9,7 @@
 #include "Laser.h"
 #include "Snipers.h"
 #include "Police.h"
+#include "Texture.h"
 class Game : public BaseGame
 {
 public:
@@ -36,6 +37,7 @@ private:
 	SCamera* m_pSCamera;
 	Laser* m_Laser1;
 	Laser* m_Laser2;
+	Laser* m_Laser3;
 	Inventory* m_pInventory;
 	enum class InventoryState {
 		open, 
@@ -48,6 +50,9 @@ private:
 	std::vector<Snipers*> m_Snipers;
 	std::vector<Police*> m_Polices;
 	Rectf m_Victory;
+	Texture* m_pSpace;
+	bool m_Space;
+	TTF_Font* m_pFont;
 
 	// FUNCTIONS
 	void Initialize();

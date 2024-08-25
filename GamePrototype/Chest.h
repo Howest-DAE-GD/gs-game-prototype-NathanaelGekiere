@@ -12,6 +12,7 @@ public:
 	void Open(Inventory* inv);
 	Rectf GetRadius();
 	std::vector<Point2f> ReturnVector();
+	bool IsChestOpen();
 private:
 	Rectf m_Bounds;
 	Rectf m_Radius;
@@ -22,5 +23,6 @@ private:
 	ChestState m_State;
 	bool m_HasKey;
 	Key* m_Key;
+	bool m_IsOpen;
 };
 
