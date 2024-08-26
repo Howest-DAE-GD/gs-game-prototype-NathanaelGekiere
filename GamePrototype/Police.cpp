@@ -5,6 +5,7 @@
 Police::Police(Point2f pos, Point2f end, float distance, float velocity, int points, float angle, bool rotate, bool cycle, bool linear, std::string direction)
 	:m_Bounds{pos.x, pos.y, 30, 30}
 	,m_Vision{ pos.x, pos.y, 0,0}
+	,m_Warning{pos.x, pos.y, 0,0}
 	,m_StartPos{pos}
 	,m_EndPos{end}
 	,m_Distance{distance}
@@ -34,6 +35,10 @@ void Police::Draw()
 	utils::SetColor(Color4f{ 0.f, 0.f, 1.f, 1.f });
 	//utils::DrawRect(m_Bounds);
 	utils::FillEllipse(Point2f((m_Bounds.left + m_Bounds.width / 2) -1,( m_Bounds.bottom + m_Bounds.height / 2) -1), m_Bounds.width / 6, m_Bounds.height / 6);
+	if (m_Linear == true) {
+		utils::SetColor(Color4f(1.f, 1.f, 0.f, 0.75f));
+		utils::FillRect(m_Warning);
+	}
 	utils::SetColor(Color4f(1.f, 0.f, 0.f, 1.f));
 	utils::FillRect(m_Vision);
 	if (m_Rotate == true) {
@@ -187,24 +192,40 @@ void Police::ChangeVision()
 			m_Vision.height = 30;
 			m_Vision.left = m_Bounds.left;
 			m_Vision.bottom = m_Bounds.bottom;
+			m_Warning.width = 10;
+			m_Warning.height = 30;
+			m_Warning.left = m_Bounds.left-10;
+			m_Warning.bottom = m_Bounds.bottom;
 		}
 		if (m_Watch == Direction::down) {
 			m_Vision.width = 30;
 			m_Vision.height = 10;
 			m_Vision.left = m_Bounds.left;
 			m_Vision.bottom = m_Bounds.bottom;
+			m_Warning.width = 30;
+			m_Warning.height = 10;
+			m_Warning.left = m_Bounds.left;
+			m_Warning.bottom = m_Bounds.bottom-10;
 		}
 		if (m_Watch == Direction::right) {
 			m_Vision.width = 10;
 			m_Vision.height = 30;
 			m_Vision.left = m_Bounds.left + 20;
 			m_Vision.bottom = m_Bounds.bottom;
+			m_Warning.width = 10;
+			m_Warning.height = 30;
+			m_Warning.left = m_Bounds.left +30;
+			m_Warning.bottom = m_Bounds.bottom;
 		}
 		if (m_Watch == Direction::up) {
 			m_Vision.width = 30;
 			m_Vision.height = 10;
 			m_Vision.left = m_Bounds.left;
 			m_Vision.bottom = m_Bounds.bottom + 20;
+			m_Warning.width = 30;
+			m_Warning.height = 10;
+			m_Warning.left = m_Bounds.left;
+			m_Warning.bottom = m_Bounds.bottom +30;
 		}
 	}
 	if (m_Rotate == true) {

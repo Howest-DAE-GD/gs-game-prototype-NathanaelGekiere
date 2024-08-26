@@ -35,7 +35,7 @@ void Game::Update( float elapsedSec )
 	if (m_Inv == InventoryState::close) {
 		m_Player->Move(pStates, elapsedSec, m_Walls, m_Chests, m_Doors);
 		if (pStates[SDL_SCANCODE_SPACE]) {
-			m_Player->Action(m_Chests, m_Doors, m_pInventory, m_Laser1, m_Laser2, m_Laser3);
+			m_Player->Action(m_Chests, m_Doors, m_pInventory, m_Laser1, m_Laser2, m_Laser3, m_Laser4, m_Laser5);
 		}
 		for (int police{}; police < m_Polices.size(); ++police) {
 			m_Polices.at(police)->Move(elapsedSec);
@@ -58,6 +58,18 @@ void Game::Update( float elapsedSec )
 			Reset();
 		}
 	}
+	if (m_Laser4->IsEnabled() == true) {
+		if (utils::IsOverlapping(m_Player->GetBounds(), m_Laser4->GetBounds()) == true) {
+			Reset();
+		}
+	}
+	if (m_Laser5->IsEnabled() == true) {
+		if (utils::IsOverlapping(m_Player->GetBounds(), m_Laser5->GetBounds()) == true) {
+			Reset();
+		}
+	}
+	m_Laser4->UpdateTimer(elapsedSec);
+	m_Laser5->UpdateTimer(elapsedSec);
 	for (int sniper{}; sniper < m_Snipers.size(); ++sniper) {
 		if (utils::IsOverlapping(m_Player->GetBounds(), m_Snipers.at(sniper)->GetBounds()) == true) {
 			m_Snipers.at(sniper)->Count(elapsedSec);
@@ -97,6 +109,12 @@ void Game::Update( float elapsedSec )
 	else if (utils::IsOverlapping(m_Player->GetBounds(), m_Laser3->GetRadius()) == true) {
 		if (m_Laser3->IsEnabled() == true) m_Space = true;
 	}
+	else if (utils::IsOverlapping(m_Player->GetBounds(), m_Laser4->GetRadius()) == true) {
+		if (m_Laser4->IsEnabled() == true) m_Space = true;
+	}
+	else if (utils::IsOverlapping(m_Player->GetBounds(), m_Laser5->GetRadius()) == true) {
+		if (m_Laser5->IsEnabled() == true) m_Space = true;
+	}
 	// Check keyboard state
 	//const Uint8 *pStates = SDL_GetKeyboardState( nullptr );
 	//if ( pStates[SDL_SCANCODE_RIGHT] )
@@ -114,19 +132,27 @@ void Game::Draw( ) const
 	ClearBackground();
 	if (m_Inv == InventoryState::open) {
 		m_pInventory->Draw();
+		m_pPaused->Draw(Rectf(250, 590, 500, 200));
 	}
 	if (m_Inv == InventoryState::close) {
 		m_pSCamera->Aim(930, 780, m_Player->GetPosition());
 		DrawSnipers();
+		m_pI->Draw(Rectf(510, 620, 80, 40));
+		m_KeyNeed->Draw(Rectf(590, 650, 30, 10));
+		m_pR->Draw(Rectf(155, 620, 40, 20));
 		m_Player->Draw();
 		m_Laser1->Draw();
 		m_Laser2->Draw();
 		m_Laser3->Draw();
+		m_Laser4->Draw();
+		m_Laser5->Draw();
 		DrawPolices();
 		DrawWalls();
 		DrawChests();
 		DrawDoors();
 		DrawVictory();
+		SetColor(Color4f(0.f, 0.50f, 0.f, 1.f));
+		DrawLine(Point2f(66, 406), Point2f(100, 478));
 		//DrawSquares();
 		m_pSCamera->Reset();
 		if (m_Space == true) {
@@ -233,11 +259,17 @@ void Game::InitializeAll()
 	}
 	m_pInventory = new Inventory;
 	m_pSCamera = new SCamera{ 120.f , 60.f };
-	m_Player = new Villain{ Point2f(560,623) };
-	m_Laser1 = new Laser{Point2f(600,540), Point2f(600,490)};
-	m_Laser2 = new Laser{ Point2f(100,479), Point2f(60,383)};
-	m_Laser3 = new Laser{ Point2f(205,90), Point2f(105,100) };
+	m_Player = new Villain{ Point2f(550,620) };
+	m_Laser1 = new Laser{Point2f(600,540), Point2f(600,490), true, true, false,0};
+	m_Laser2 = new Laser{ Point2f(100,479), Point2f(60,383), true, true, false,0};
+	m_Laser3 = new Laser{ Point2f(105,130), Point2f(105,100), false, true, false,0};
+	m_Laser4 = new Laser{ Point2f(203,90), Point2f(203,150), true, false, true, 8.f};
+	m_Laser5 = new Laser{ Point2f(205,0), Point2f(225,55), true, true, true, 2.f };
 	m_pSpace = new Texture{ "Space", m_pFont, Color4f(1.f,1.f,1.f,1.f) };
+	m_pI = new Texture{ "ZQSD to move, I for inventory", m_pFont, Color4f(1.f,1.f,1.f,1.f) };
+	m_pR = new Texture{ "R to reset if stuck", m_pFont, Color4f(1.f,1.f,1.f,1.f) };
+	m_pPaused = new Texture{ "Game is paused", m_pFont, Color4f(1.f,1.f,1.f,1.f) };
+	m_KeyNeed = new Texture{ "Correct key needed to open door", m_pFont, Color4f(1.f,1.f,1.f,1.f) };
 	InitializeWalls();
 	InitializeChests();
 	InitializeDoors();
@@ -257,8 +289,8 @@ void Game::InitializeWalls()
 	std::vector<Point2f> m_Walls2{
 		Point2f{390,60},
 		Point2f{390,120},
-		Point2f{315,120},
-		Point2f{315,150},
+		Point2f{135,120},
+		Point2f{135,150},
 		Point2f{330,150},
 		Point2f{330,180},
 		Point2f{90, 180},
@@ -272,7 +304,7 @@ void Game::InitializeWalls()
 		Point2f{390,60}
 	};
 	std::vector<Point2f> m_Walls3{
-		Point2f{315,120},
+		Point2f{105,120},
 		Point2f{30,120},
 		Point2f{30,690},
 		Point2f{90,690},
@@ -369,8 +401,8 @@ void Game::InitializeWalls()
 		Point2f{90,240},
 		Point2f{60,240},
 		Point2f{60,150},
-		Point2f{315,150},
-		Point2f{315,120}
+		Point2f{105,150},
+		Point2f{105,120}
 	};
 	std::vector<Point2f> m_Walls4{
 		Point2f{120,240},
@@ -495,8 +527,8 @@ void Game::InitializeWalls()
 	std::vector<Point2f> m_Walls14{
 		Point2f{195,90},
 		Point2f{225,90},
-		Point2f{225,0},
-		Point2f{195,0},
+		Point2f{225,30},
+		Point2f{195,30},
 		Point2f{195,90}
 	};
 	std::vector<Point2f> m_Walls15{
@@ -672,11 +704,12 @@ void Game::InitializePolices()
 	m_Polices.push_back(new Police{ Point2f(90,270), Point2f(90,210), 60.f, 15.f,0,0,false, true,false, "down" });
 	m_Polices.push_back(new Police{ Point2f(90,210), Point2f(150,210), 60.f, 15.f,0,0, false, true,false, "right" });
 	m_Polices.push_back(new Police{ Point2f(150,210), Point2f(150,270), 60.f, 15.f,0,0, false, true,false, "up" });
-	m_Polices.push_back(new Police{ Point2f(615,330), Point2f(675,330), 60.f, 30.f,0,0, false, true,false, "right" });
+	m_Polices.push_back(new Police{ Point2f(660,360), Point2f(0,0), 0.f, 2.f,2,0, true, false,false, "up" });
+	m_Polices.push_back(new Police{ Point2f(660,360), Point2f(0,0), 0.f, 2.f,2,0, true, false,false, "down" });
 	m_Polices.push_back(new Police{ Point2f(390,210),  Point2f(390,420), 180.f, 45.f,0,0, false, false,true, "up" });
 	m_Polices.push_back(new Police{ Point2f(480,420), Point2f(480,210), 180.f, 45.f,0,0, false, false,true, "down" });
-	m_Polices.push_back(new Police{ Point2f(345,75), Point2f(240,75), 105.f, 45.f,0,0, false, false,true, "left" });
-	m_Polices.push_back(new Police{ Point2f(240,15), Point2f(345,15), 105.f, 45.f,0,0, false, false,true, "right" });
+	m_Polices.push_back(new Police{ Point2f(345,80), Point2f(240,75), 105.f, 45.f,0,0, false, false,true, "left" });
+	m_Polices.push_back(new Police{ Point2f(240,10), Point2f(345,15), 105.f, 45.f,0,0, false, false,true, "right" });
 	m_Polices.push_back(new Police{ Point2f(660,90), Point2f(510,90), 150.f, 30.f,0,0, false, false,true, "left" });
 	m_Polices.push_back(new Police{ Point2f(510,0), Point2f(690,0), 180.f, 30.f,0,0, false, false,true, "right" });
 	m_Polices.push_back(new Police{ Point2f(240,300), Point2f(0,0), 0.f, 2.f,3,-15.f, true, false,false, "left" });
@@ -696,10 +729,10 @@ void Game::DrawWalls() const
 	FillRect(390, 60, 30, 150);
 	FillRect(360, 120, 30, 180);
 	FillRect(330, 120, 30, 90);
-	FillRect(315, 120, 15, 30);
+	FillRect(135, 120, 195, 30);
 	FillRect(90, 180, 240, 30);
 	FillRect(120, 240, 30, 30);
-	FillRect(30, 120, 285, 30);
+	FillRect(30, 120, 75, 30);
 	FillRect(30, 150, 30, 480);
 	FillRect(60, 240, 30, 135);
 	FillRect(60, 405, 30, 75);
@@ -763,7 +796,7 @@ void Game::DrawWalls() const
 	DrawRect(0.f, 0.f, 930.f, 780.f);
 	SetColor(Color4f(0.f, 0.39f, 0.f, 1.f));
 	FillRect(30, 90, 75, 30);
-	FillRect(195, 0, 30, 90);
+	FillRect(195, 30, 30, 60);
 	FillRect(135, 30, 30, 90);
 	FillRect(90, 30, 45, 30);
 	FillRect(270, 45, 22.5f, 30);
@@ -871,8 +904,20 @@ void Game::DeleteAll()
 	m_Laser2 = nullptr;
 	delete m_Laser3;
 	m_Laser3 = nullptr;
+	delete m_Laser4;
+	m_Laser4 = nullptr;
+	delete m_Laser5;
+	m_Laser5 = nullptr;
 	delete m_pSpace;
 	m_pSpace = nullptr;
+	delete m_pI;
+	m_pSpace = nullptr;
+	delete m_pR;
+	m_pSpace = nullptr;
+	delete m_pPaused;
+	m_pSpace = nullptr;
+	delete m_KeyNeed;
+	m_KeyNeed = nullptr;
 	if (m_pFont != nullptr)
 	{
 		TTF_CloseFont(m_pFont);

@@ -38,6 +38,8 @@ private:
 	Laser* m_Laser1;
 	Laser* m_Laser2;
 	Laser* m_Laser3;
+	Laser* m_Laser4;
+	Laser* m_Laser5;
 	Inventory* m_pInventory;
 	enum class InventoryState {
 		open, 
@@ -51,6 +53,10 @@ private:
 	std::vector<Police*> m_Polices;
 	Rectf m_Victory;
 	Texture* m_pSpace;
+	Texture* m_pI;
+	Texture* m_pR;
+	Texture* m_pPaused;
+	Texture* m_KeyNeed;
 	bool m_Space;
 	TTF_Font* m_pFont;
 

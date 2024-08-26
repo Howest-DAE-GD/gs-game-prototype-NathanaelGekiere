@@ -14,6 +14,7 @@ public:
 private:
 	Rectf m_Bounds;
 	Rectf m_Vision;
+	Rectf m_Warning;
 	Point2f m_StartPos;
 	Point2f m_EndPos;
 	Point2f m_Pos;
